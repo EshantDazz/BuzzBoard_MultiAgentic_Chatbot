@@ -4,6 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 task_allocator_system_prompt = """
 You are a task allocator Agent. You will be given a query and based on that you need to understand which Agent will further work 
 with your query. Your task is to understand the query carefully and decide which Agent will take over the task and move forward.
+Make sure while scoring you check the chat history as well and based on that you align the scores
 """
 
 

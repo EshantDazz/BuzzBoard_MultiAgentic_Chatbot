@@ -58,7 +58,7 @@ Analyze the request based on the user’s query, referencing the JSON data where
 
 Example Query:
 <query>"{query}"</query>
-
+Make sure you mention some of the information of the business of company which you get from the json data while responding
 These are all the things you are capable of doing but go through the query and react to that only and then give me a response. Your reponse should relevant to query
 """
 
@@ -91,5 +91,6 @@ BE VERY CAREFUL NOT TO RETURN ANYTHING LIKE
 Based on the query requirements, here's the refined response
 
 JUST RETURN BACK DIRECTLY THE NEW RESPONSE WITHOUT ANY ADDITIONAL DETAILS
+Dont give any tips, any extra message any extra info. Just reframe it perfectly and return that as it is
  """
 )

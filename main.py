@@ -1,18 +1,27 @@
+from re import A
 import streamlit as st
 from datetime import datetime
 import asyncio
 
-# Initialize session state for chat history
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
+
+from src.session_state_utils import (
+    initialize_chat_history,
+    get_chat_history,
+    add_to_chat_history,
+)
+from src.display_ui import display_score_message
+from src.ai_workflow import (
+    return_agent1_response,
+    return_agent2_reponse,
+    return_agent3_reponse,
+)
+from langchain_core.messages import HumanMessage, AIMessage
+
+from src.ai_workflow import return_agent_number
 
 
 async def chatbot_response_stream(user_input: str):
-    """
-    Simulates an async stream of tokens. Replace this with actual
-    streaming logic (e.g., from an LLM or another async source).
-    """
-    # Example tokens (you'd replace this with real streaming content)
+    """Simulates an async stream of tokens."""
     tokens = [
         "Hello",
         ", ",
@@ -26,78 +35,130 @@ async def chatbot_response_stream(user_input: str):
         " ",
         "response!",
     ]
-
     for token in tokens:
-        # Yield one token at a time
         yield token
-        # Simulate a delay between tokens
         await asyncio.sleep(0.1)
 
 
 async def main():
     st.title("Persistent Chatbot with Streaming")
 
-    # Display chat history at the top with color-coded backgrounds
+    # Initialize chat history
+    initialize_chat_history()
+
+    # Display chat history
     st.write("## Chat History")
-    for chat in st.session_state.chat_history:
-        # User message in a dark-gray box with white text
+    for i in range(0, len(get_chat_history()), 2):  # Iterate over pairs of messages
+        human_message = get_chat_history()[i]
+        ai_message = (
+            get_chat_history()[i + 1] if i + 1 < len(get_chat_history()) else None
+        )
+
         st.markdown(
             f"""
             <div style="background-color: #2f2f2f; color: #ffffff;
                         padding: 10px; margin-bottom: 5px; border-radius: 5px;">
-                <strong>You ({chat['timestamp']}):</strong> {chat['user']}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-        # Bot message in a dark-blue box with white text
-        st.markdown(
-            f"""
-            <div style="background-color: #1f3c56; color: #ffffff;
-                        padding: 10px; margin-bottom: 15px; border-radius: 5px;">
-                <strong>Bot:</strong> {chat['bot']}
+                <strong>You:</strong> {human_message.content}
             </div>
             """,
             unsafe_allow_html=True,
         )
 
-    # Use a form to handle input submission
+        if ai_message:
+            st.markdown(
+                f"""
+                <div style="background-color: #1f3c56; color: #ffffff;
+                            padding: 10px; margin-bottom: 15px; border-radius: 5px;">
+                    <strong>Bot:</strong> {ai_message.content}
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    # Use a form to handle input
     with st.form(key="chat_form", clear_on_submit=True):
         user_input = st.text_input("Enter your question:", key="user_input")
         submit_button = st.form_submit_button("Send")
 
         if submit_button and user_input.strip():
-            # We'll create a placeholder to display the streaming text
             bot_response_placeholder = st.empty()
+            with st.spinner(
+                "Analyzing task requirements and assigning the best-fit agent…"
+            ):
+                agent_selected = await return_agent_number(user_input)
+                print(f"Agent Selected: {agent_selected}")
+                await display_score_message(agent_selected)
 
-            # Show a spinner while streaming
-            with st.spinner("Bot is thinking..."):
+            if agent_selected == 1:
                 partial_response = ""
-                # 3. Stream tokens from the async generator
-                async for token in chatbot_response_stream(user_input):
-                    partial_response += token
-                    # Update the placeholder in real-time
+                async for chunk in return_agent1_response(user_input):
+                    partial_response += chunk
                     bot_response_placeholder.markdown(
                         f"""
                         <div style="background-color: #1f3c56; color: #ffffff;
                                     padding: 10px; border-radius: 5px;">
-                            <strong>Bot (in-progress):</strong> {partial_response}
+                            <strong>Eshant Bot (Agent 1 in-progress):</strong> {partial_response}
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
-
-                # Once streaming is done, store the final response in session state
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                st.session_state.chat_history.append(
-                    {
-                        "timestamp": timestamp,
-                        "user": user_input,
-                        "bot": partial_response,
-                    }
+                add_to_chat_history(
+                    HumanMessage(content=user_input),
+                    AIMessage(content=partial_response),
+                )
+            elif agent_selected == 2:
+                partial_response = ""
+                async for chunk in return_agent2_reponse(user_input):
+                    partial_response += chunk
+                    bot_response_placeholder.markdown(
+                        f"""
+                        <div style="background-color: #1f3c56; color: #ffffff;
+                                    padding: 10px; border-radius: 5px;">
+                            <strong>Eshant Bot (Agent 2 in-progress):</strong> {partial_response}
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                add_to_chat_history(
+                    HumanMessage(content=user_input),
+                    AIMessage(content=partial_response),
+                )
+            elif agent_selected == 3:
+                partial_response = ""
+                async for chunk in return_agent3_reponse(user_input):
+                    partial_response += chunk
+                    bot_response_placeholder.markdown(
+                        f"""
+                        <div style="background-color: #1f3c56; color: #ffffff;
+                                    padding: 10px; border-radius: 5px;">
+                            <strong>Eshant Bot (Agent 3 in-progress):</strong> {partial_response}
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                add_to_chat_history(
+                    HumanMessage(content=user_input),
+                    AIMessage(content=partial_response),
                 )
 
-            # Rerun the app to display the updated history
+            else:
+                with st.spinner(f"Agent {agent_selected} is responding..."):
+                    response_message = "Sorry, this agent has not been implemented yet."
+                    bot_response_placeholder.markdown(
+                        f"""
+                        <div style="background-color: #1f3c56; color: #ffffff;
+                                    padding: 10px; border-radius: 5px;">
+                            <strong>Bot:</strong> {response_message}
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                    add_to_chat_history(
+                        HumanMessage(content=user_input),
+                        AIMessage(content=response_message),
+                    )
+
+            # Rerun to update the UI
             st.rerun()
 
 
