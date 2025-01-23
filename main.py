@@ -20,7 +20,7 @@ from src.ai_workflow import return_agent_number
 
 
 async def main():
-    st.title("Persistent Chatbot with Streaming")
+    st.title("Buzzboard Multi Agentic Chatbot")
 
     # Initialize chat history
     initialize_chat_history()
