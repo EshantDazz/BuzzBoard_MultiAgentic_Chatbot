@@ -1,6 +1,5 @@
-from re import A
 import streamlit as st
-from datetime import datetime
+
 import asyncio
 
 
@@ -18,26 +17,6 @@ from src.ai_workflow import (
 from langchain_core.messages import HumanMessage, AIMessage
 
 from src.ai_workflow import return_agent_number
-
-
-async def chatbot_response_stream(user_input: str):
-    """Simulates an async stream of tokens."""
-    tokens = [
-        "Hello",
-        ", ",
-        "this",
-        " ",
-        "is",
-        " ",
-        "a",
-        " ",
-        "streaming",
-        " ",
-        "response!",
-    ]
-    for token in tokens:
-        yield token
-        await asyncio.sleep(0.1)
 
 
 async def main():
@@ -142,21 +121,10 @@ async def main():
                 )
 
             else:
-                with st.spinner(f"Agent {agent_selected} is responding..."):
-                    response_message = "Sorry, this agent has not been implemented yet."
-                    bot_response_placeholder.markdown(
-                        f"""
-                        <div style="background-color: #1f3c56; color: #ffffff;
-                                    padding: 10px; border-radius: 5px;">
-                            <strong>Bot:</strong> {response_message}
-                        </div>
-                        """,
-                        unsafe_allow_html=True,
-                    )
-                    add_to_chat_history(
-                        HumanMessage(content=user_input),
-                        AIMessage(content=response_message),
-                    )
+                st.warning(
+                    "It looks like the input provided is not valid or relevant to the project. Could you please review and try again?"
+                )
+                await asyncio.sleep(5)
 
             # Rerun to update the UI
             st.rerun()

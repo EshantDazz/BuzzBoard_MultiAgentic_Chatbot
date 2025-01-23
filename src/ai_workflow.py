@@ -15,13 +15,10 @@ from core.prompts.agent1 import agent1_prompt, reframe_agent1_response
 from core.prompts.agent2 import agent2_prompt, reframe_agent2_response
 from core.prompts.agent3 import agent3_prompt, reframe_agent3_response
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+from langchain_core.messages import HumanMessage
 
-from src.session_state_utils import (
-    initialize_chat_history,
-    get_chat_history,
-    update_chat_history,
-)
+from src.session_state_utils import get_chat_history
+
 
 load_dotenv()
 
@@ -59,8 +56,10 @@ async def return_agent1_response(query):
         answer = await agent1_chain.ainvoke(
             {"query": query, "chat_history": chat_history}
         )
+        messages = []
         if answer.tool_calls:
-            messages = [HumanMessage(query)]
+            messages.extend(chat_history)
+            messages.append(HumanMessage(query))
             messages.append(answer)
             for tool_call in answer.tool_calls:
                 selected_tool = {
@@ -88,14 +87,15 @@ async def return_agent2_reponse(query):
     tools = [get_specific_company_details, calculator]
     with st.spinner("Agent 2 is preparing your response..."):
         llm_tools_agent_2 = llm_claud.bind_tools(tools)
-        agent2_chain = agent1_prompt | llm_tools_agent_2
+        agent2_chain = agent2_prompt | llm_tools_agent_2
         chat_history = get_chat_history()
         answer = await agent2_chain.ainvoke(
             {"query": query, "chat_history": chat_history}
         )
-
+        messages = []
         if answer.tool_calls:
-            messages = [HumanMessage(query)]
+            messages.extend(chat_history)
+            messages.append(HumanMessage(query))
             messages.append(answer)
             for tool_call in answer.tool_calls:
                 selected_tool = {
@@ -127,10 +127,12 @@ async def return_agent3_reponse(query):
         answer = await agent3_chain.ainvoke(
             {"query": query, "chat_history": chat_history}
         )
+        messages = []
 
         if answer.tool_calls:
             print(answer)
-            messages = [HumanMessage(query)]
+            messages.extend(chat_history)
+            messages.append(HumanMessage(query))
             messages.append(answer)
             for tool_call in answer.tool_calls:
                 print(tool_call)
@@ -141,6 +143,7 @@ async def return_agent3_reponse(query):
                 tool_msg = await selected_tool.ainvoke(tool_call)
 
                 messages.append(tool_msg)
+
             response = await llm_tools_agent_3.ainvoke(messages)
             response = response.content
 

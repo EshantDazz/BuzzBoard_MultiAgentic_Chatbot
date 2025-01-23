@@ -8,5 +8,3 @@ async def display_score_message(score):
         st.info("Congrats the Prospect Insights Agent has been selected for you")
     elif score == 3:
         st.info("Congrats the Communication Agent has been selected for you")
-    else:
-        st.warning("It seems like you have entered some input. Please try again")
