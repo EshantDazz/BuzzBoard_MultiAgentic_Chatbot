@@ -10,7 +10,7 @@ This project showcases a persistent AI-driven chatbot with a multi-agent archite
    - Capabilities:
      - Identifies high-potential leads using JSON data.
      - Suggests businesses with unmet needs or growth potential.
-     - Filters data based on industry, revenue, location, and other signals.
+     - Filters data based on  industry, revenue, location, and other signals.
 
 2. **Agent 2: Prospect Insights Agent**
    - Behavior: Functions as a business analyst or market researcher.
